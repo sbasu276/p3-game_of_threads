@@ -6,7 +6,7 @@ from lsm import LsmTree
 from utils import parse_req, call_api
 
 class MultiThreadedLsmServer(object):
-    def __init__(self, host, port, cache_size, db_name, c0_size):
+    def __init__(self, host, port, cache_size, db_name, c0_size=200):
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
