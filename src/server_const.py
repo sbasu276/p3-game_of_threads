@@ -10,3 +10,6 @@ SERVER_ID_MAP = {
 # IP and port for central lock server
 LOCK_SERVER_IP = ""
 LOCK_SERVER_PORT = 
+
+GET_TS = "GET-TS"
+GET = "GET"
