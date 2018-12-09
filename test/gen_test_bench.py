@@ -45,8 +45,6 @@ def make_request_streams(rr, rw, size, keys, rem_keys):
             stream.append(gen_put(key))
     return stream
 
-h = "127.0.0.1"
-p = "65210"
 size = [500]
 rates = [600]
 ratio = [0.9, 0.1]

@@ -29,8 +29,8 @@ class AbdClient:
         self.server_ids = [i+1 for i in range(num_servers)]
         self.server_map = CONST.SERVER_ID_MAP
         self.quorum_size = (num_servers//2)+1
-        self.read_quorum = random.sample(self.server_ids, quorum_size)
-        self.write_quorum = random.sample(self.server_ids, quorum_size)
+        self.read_quorum = random.sample(self.server_ids, self.quorum_size)
+        self.write_quorum = random.sample(self.server_ids, self.quorum_size)
         self.lock = threading.Lock()
 
     def get(self, key):
@@ -54,7 +54,7 @@ class AbdClient:
         for _id in self.server_ids:
             server = self.server_map[_id]
             threads.append(threading.Thread(target=get_handler, \
-					    args=(server, key, CONST.GET_TS, output, barrier, lock)))
+					    args=(server, key, CONST.GET_TS, output, barrier, self.lock)))
         for thread in threads:
             thread.start()
         try:
@@ -65,14 +65,14 @@ class AbdClient:
         max_time = time.get_max_ts(output)
         return max_time
         
-    def _get(self):
+    def _get(self, key):
         barrier = threading.Barrier(self.quorum_size, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
             server = self.server_map[_id]
             threads.append(threading.Thread(target=get_handler, \
-					    args=(server, key, CONST.GET, output, barrier, lock)))
+					    args=(server, key, CONST.GET, output, barrier, self.lock)))
         for thread in threads:
             thread.start()
         try:
@@ -101,4 +101,14 @@ class AbdClient:
             barrier.wait()
         except threading.BrokenBarrierError:
             pass
+
+
+if __name__ == "__main__":
+    client = AbdClient(1)
+    print(client.get(10))
+    print(client.get(12))
+    print(client.get(10))
+    print(client.put(11, "b"))
+    print(client.get(13))
+
 

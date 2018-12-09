@@ -1,7 +1,6 @@
-from logical_time import time
+import sys
 from multi_threaded_server import MultiThreadedServer as ServerBase
 # Comment the above line and uncomment the following line for LSM implementation
-# No other change is required. The factory style implementation is sufficient
 #from mt_lsm_server import MultiThreadedLsmServer as ServerBase
 
 class AbdServer(ServerBase):

@@ -10,8 +10,8 @@ class Client:
         self.sock.connect((host, port))
 
     def send_data(self, message):
-        self.sock.send(message)
+        self.sock.send(message.encode())
         data = self.sock.recv(1024)
-        return data
+        return data.decode()
         #print(data.decode('utf-8'))
 
