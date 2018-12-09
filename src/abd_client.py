@@ -22,7 +22,7 @@ def acquire_lock_handler(server, client_id, key, barrier):
         try:
             barrier.wait() #reporting to barrier
         except threading.BrokenBarrierError: #Barrier broken - releasing lock
-            client.send_info("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
+            client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
 
     else if(data == 'LOCK_DENIED'):
         print('Lock denied! Exiting..')
@@ -32,7 +32,7 @@ def acquire_lock_handler(server, client_id, key, barrier):
 
 def release_lock_handler(server, client_id, key):
     client = Client(server[0], server[1])
-    client.send_info("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
+    client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
 
     
 def put_handler(server, key, value, barrier):

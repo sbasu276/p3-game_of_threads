@@ -15,6 +15,7 @@ class MultiThreadedServer(object):
         self.cache = Cache(cache_size)
         self.persistent = Persistent(db_name)
         self.lock = threading.Lock()
+        self.client_lock = dict()
 
     def run_server(self):
         self.sock.listen(5)

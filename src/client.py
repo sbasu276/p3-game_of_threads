@@ -9,9 +9,6 @@ class Client:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((host, port))
 
-    def send_info(self, message):
-        self.sock.send(message)
-
     def send_data(self, message):
         self.sock.send(message)
         data = self.sock.recv(1024)
