@@ -55,7 +55,7 @@ class BlockingClient:
         self.client_id = client_id
 
     def get(self, key):
-        while(!self._acquire_lock(Key)): #Spin lock acquire
+        while(not self._acquire_lock(Key)): #Spin lock acquire
             sleep(2)
         value = self._get(key)
         self._release_lock(key)
@@ -63,7 +63,7 @@ class BlockingClient:
         return v
 
     def put(self, key, value):
-        while(!self._acquire_lock(Key)): #Spin lock acquire
+        while(not self._acquire_lock(Key)): #Spin lock acquire
             sleep(2)
         self._put(key, value)
         self._release_lock(key)
