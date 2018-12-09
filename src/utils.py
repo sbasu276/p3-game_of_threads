@@ -1,10 +1,13 @@
 from bisect import bisect_left
+import logical_time as time
+
 class Request:
-    def __init__(self, op=None, key=None, value=None, fd=None):
+    def __init__(self, op=None, key=None, value=None, tag=None, fd=None):
         self.op = op
         self.key = key
         self.value = value
         self.fd = fd
+        self.tag = tag
 
 def binary_search(a, x, lo=0, hi=None):
     hi = hi if hi is not None else len(a) 
@@ -16,8 +19,10 @@ def parse_req(request):
     req = request.strip('\n').split()
     #print(req)
     request = None
-    if len(req)>2:
+    if len(req)==3:
         request = Request(req[0], req[1], req[2])
+    elif len(req)==4:
+        request = Request(req[0], req[1], req[2], req[3])
     else:
         request = Request(req[0], req[1])
     return request
@@ -27,12 +32,6 @@ def add_response(mapper, sock, response):
         data = mapper[sock]
         data.resp = response
         mapper[sock] = data
-
-
-#Note: the methods in  utils.py uses the storage object names as cache and persistent. 
-#All methods are generic and works for both Naive and LSM. 
-#This is just to clarify that for LSM implementation the object name persistent might a bit confusing. 
-#A name such as second_level_storage might have been more appropriate.
 
 def get(key, cache, persistent, lock):
     lock.acquire()
@@ -87,17 +86,40 @@ def delete(key, cache, persistent, lock):
         return "-1"
     return "ACK"
 
+def get_timestamp(key, cache, persistent, lock):
+    val = get(key, cache, persistent, lock)
+    if val != "-1":
+        v, t = val.split(":", 1)
+        return t
+    return None
+
+def write(key, value, tag, cache, persistent, lock):
+    ts = get_timestamp(key, cache, persistent, lock)
+    value = value+":"+tag
+    if ts:
+        if time.is_greater(tag, ts):
+            lock.acquire()
+            cache.put(key, value) #key, value is in cache after get_timestamp()
+            lock.release()
+    else:
+        put(key, value, cache, persistent, lock)
+    return "ACK"
+
 OP_FUNC_MAPPER = {
             'GET': get,
             'PUT': put,
             'INSERT': insert,
-            'DELETE': delete
+            'DELETE': delete,
+            'GET-TS': get_timestamp,
+            'WRITE': write
         }
 
 def call_api(req, cache, persistent, lock):
     if OP_FUNC_MAPPER.get(req.op):
-        if req.op in ['GET', 'DELETE']:
+        if req.op in ['GET', 'DELETE', 'GET-TS']:
             return OP_FUNC_MAPPER[req.op](req.key, cache, persistent, lock)
+        elif req.op in ['WRITE']:
+            return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
         else:
             return OP_FUNC_MAPPER[req.op](req.key, req.value, cache, persistent, lock)
     else:

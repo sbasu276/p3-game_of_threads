@@ -8,16 +8,19 @@ import pickledb
 def rand_str(size):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=size))
 
-def rand_val(size):
-    return ''.join(random.choices(string.ascii_lowercase, k=size))
+def rand_val(size, node):
+    val = ''.join(random.choices(string.ascii_lowercase, k=size))
+    if node:
+        val = val+":"+"0,"+str(node)
+    return val
 
-def main(num, size, db, db_type):
+def main(num, size, db, db_type, node):
     keys = []
     keys_append = keys.append
     for i in range(num):
         k = size - len(str(i))
         key = str(i) # '0'*k + str(i)
-        value = rand_val(size)
+        value = rand_val(size, node)
         if db_type=="pickle":
             db.set(key, value)
         else:
@@ -38,6 +41,7 @@ def parse_arguments():
     parser.add_argument('-t','--db-type', dest='db_type', required=True)
     parser.add_argument('-n','--num', dest='num', default=0, required=False)
     parser.add_argument('-s','--size', dest='size', default=0, required=False)
+    parser.add_argument('-i','--node', dest='node', default=0, required=False)
     args = parser.parse_args()
     return args
 
@@ -51,10 +55,10 @@ if __name__ == '__main__':
     if args.gen_all:
         for size in [100, 1000, 10000]:
             num = tot_size//3
-            main(num//size, size//2, db, args.db_type)
+            main(num//size, size//2, db, args.db_type, args.node)
     else:
         if args.size:
             num = int(args.num) if args.num else tot_size//int(args.size)
-            main(num, int(args.size)//2, db, args.db_type)
+            main(num, int(args.size)//2, db, args.db_type, args.node)
         else:
             raise ValueError
