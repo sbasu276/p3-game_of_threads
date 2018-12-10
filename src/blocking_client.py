@@ -1,12 +1,13 @@
-import sys, random
+import sys, random, time
 import threading
-import logical_time as time
+import logical_time as ltime
 import server_consts as CONST
 from client import Client
 
 def get_handler(server, key, _type, output, barrier, lock):
     client = Client(server[0], server[1])
     data = client.send_data("%s %s\n"%(_type, key))
+    print('response received from server', data)
     lock.acquire()
     output.append(data)
     lock.release()
@@ -17,12 +18,14 @@ def get_handler(server, key, _type, output, barrier, lock):
 
 def acquire_lock_handler(server, client_id, key, barrier):
     client = Client(server[0], server[1])
-    data = client.send_data("%s %s %s\n"%(CONST.LOCK_ACQUIRE, client_id, key))
+    print('requesting lock')
+    data = client.send_data("%s %s %s\n"%(CONST.ACQUIRE_LOCK, client_id, key))
+    print('data received for lock request', data)
     if(data == 'LOCK_GRANTED'):
         try:
             barrier.wait() #reporting to barrier
         except threading.BrokenBarrierError: #Barrier broken - releasing lock
-            client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
+            client.send_data("%s %s %s\n"%(CONST.RELEASE_LOCK, client_id, key))
 
     elif(data == 'LOCK_DENIED'):
         print('Lock denied! Exiting..')
@@ -56,7 +59,7 @@ class BlockingClient:
 
     def get(self, key):
         while(not self._acquire_lock(key)): #Spin lock acquire
-            sleep(2)
+            time.sleep(2)
         value = self._get(key)
         self._release_lock(key)
         v, ts = value.split(":", 1)
@@ -84,11 +87,11 @@ class BlockingClient:
         except threading.BrokenBarrierError:
             pass
 
-        max_time = time.get_max_ts(output)
+        max_time = ltime.get_max_ts(output)
         return max_time
         
     def _get(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -102,10 +105,13 @@ class BlockingClient:
         except threading.BrokenBarrierError:
             pass
 
+        print('output from _get = ',output)
         times = [x[1] for x in output]
         vals = [x[0] for x in output]
+        print(times, vals)
 
-        max_time = time.get_max_ts(output)
+        max_time = ltime.get_max_ts(output)
+        print(max_time)
         val = vals[times.index(max_time)]
         return val+":"+max_time 
 
@@ -125,7 +131,7 @@ class BlockingClient:
             pass
 
     def _acquire_lock(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         for _id in self.server_ids:
             server = self.server_map[_id]
@@ -140,6 +146,7 @@ class BlockingClient:
             barrier.abort()
             return False
 
+        print("Lock quorum attained")
         return True
 
     def _release_lock(self, key):

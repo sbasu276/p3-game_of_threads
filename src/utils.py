@@ -15,7 +15,7 @@ def binary_search(a, x, lo=0, hi=None):
     return (pos if pos != hi and a[pos] == x else -1)  
 
 def parse_req(request):
-    #print("UTIL ", request)
+    print("UTIL ", request)
     req = request.strip('\n').split()
     #print(req)
     request = None
@@ -34,6 +34,7 @@ def add_response(mapper, sock, response):
         mapper[sock] = data
 
 def get(key, cache, persistent, lock):
+    print('received get request for key ', key)
     lock.acquire()
     val = cache.get(key)
     lock.release()
@@ -45,6 +46,7 @@ def get(key, cache, persistent, lock):
             lock.release()
             if retkey and retval:
                 persistent.writeback(retkey, retval)
+    print('data read from storage', val)
     if val:
         return val
     else:
@@ -106,13 +108,16 @@ def write(key, value, tag, cache, persistent, lock):
     return "ACK"
 
 def acquire_lock(key, client_id, client_lock):
+    print("Inside acquire lock")
     if key in client_lock.values():
         return "LOCK_DENIED"
     else:
         client_lock[client_id] = key
+        print('Granting lock')
         return "LOCK_GRANTED"
  
 def release_lock(key, client_id, client_lock):
+    print("Inside release lock")
     client_lock[client_id] = ''
     return "ACK"
 
