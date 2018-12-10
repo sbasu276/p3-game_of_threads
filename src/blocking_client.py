@@ -9,6 +9,7 @@ def get_handler(server, key, _type, output, barrier, lock):
     data = client.send_data("%s %s\n"%(_type, key))
     print('response received from server', data)
     lock.acquire()
+    data = data.split(":")
     output.append(data)
     lock.release()
     try:
