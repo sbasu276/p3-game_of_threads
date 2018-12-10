@@ -16,8 +16,8 @@ def binary_search(a, x, lo=0, hi=None):
 
 def parse_req(request):
     print("UTIL ", request)
-    req = request.strip('\n').split()
-    #print(req)
+    req = request.strip('\n').replace(':', ' ').split()
+    print(req)
     request = None
     if len(req)==3:
         request = Request(req[0], req[1], req[2])

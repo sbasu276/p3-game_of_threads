@@ -36,7 +36,7 @@ def acquire_lock_handler(server, client_id, key, barrier):
 
 def release_lock_handler(server, client_id, key):
     client = Client(server[0], server[1])
-    client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
+    client.send_data("%s %s %s\n"%(CONST.RELEASE_LOCK, client_id, key))
 
     
 def put_handler(server, key, value, barrier):
@@ -69,12 +69,15 @@ class BlockingClient:
     def put(self, key, value):
         while(not self._acquire_lock(key)): #Spin lock acquire
             sleep(2)
+        timestamp = self._get_timestamp(key)
+        timestamp = ltime.increment(timestamp)
+        value = str(value)+":"+str(timestamp)
         self._put(key, value)
         self._release_lock(key)
         return "ACK"
 
     def _get_timestamp(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -88,7 +91,8 @@ class BlockingClient:
         except threading.BrokenBarrierError:
             pass
 
-        max_time = ltime.get_max_ts(output)
+        times = [x[0] for x in output]
+        max_time = ltime.get_max_ts(times)
         return max_time
         
     def _get(self, key):
@@ -111,13 +115,13 @@ class BlockingClient:
         vals = [x[0] for x in output]
         print(times, vals)
 
-        max_time = ltime.get_max_ts(output)
-        print(max_time)
+        max_time = ltime.get_max_ts(times)
+        print('max_time',max_time)
         val = vals[times.index(max_time)]
         return val+":"+max_time 
 
     def _put(self, key, value):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -151,6 +155,7 @@ class BlockingClient:
         return True
 
     def _release_lock(self, key):
+        threads = []
         for _id in self.server_ids:
             server = self.server_map[_id]
             threads.append(threading.Thread(target=release_lock_handler, \
