@@ -63,7 +63,8 @@ class AbdClient:
         except threading.BrokenBarrierError:
             pass
 
-        max_time = time.get_max_ts(output)
+        times = [x[1] for x in output]
+        max_time = time.get_max_ts(times)
         return max_time
         
     def _get(self, key):
@@ -84,7 +85,7 @@ class AbdClient:
         times = [x[1] for x in output]
         vals = [x[0] for x in output]
 
-        max_time = time.get_max_ts(output)
+        max_time = time.get_max_ts(times)
         val = vals[times.index(max_time)]
         return val+":"+max_time 
 
