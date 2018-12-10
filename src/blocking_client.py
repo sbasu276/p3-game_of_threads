@@ -24,7 +24,7 @@ def acquire_lock_handler(server, client_id, key, barrier):
         except threading.BrokenBarrierError: #Barrier broken - releasing lock
             client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
 
-    else if(data == 'LOCK_DENIED'):
+    elif(data == 'LOCK_DENIED'):
         print('Lock denied! Exiting..')
     else:
         print('Something wrong @ acquire_lock handler')
@@ -135,7 +135,7 @@ class BlockingClient:
             thread.start()
 
         try:
-            barrier.wait(QUORUM_TIMEOUT) # waiting for quorum
+            barrier.wait(CONST.QUORUM_TIMEOUT) # waiting for quorum
         except threading.BrokenBarrierError: # failed to attain quorum within timeout - aborting barrier
             barrier.abort()
             return False
@@ -154,7 +154,7 @@ class BlockingClient:
         return True
         
 if __name__ == "__main__":
-    client = AbdClient(1)
+    client = BlockingClient(1,1)
     print(client.get(10))
     print(client.get(12))
     print(client.get(10))

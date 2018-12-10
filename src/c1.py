@@ -1,5 +1,6 @@
 from lsm_node import LsmNode
 from heapq import merge
+from utils import *
 
 def dedup(merged):
     i = 0
