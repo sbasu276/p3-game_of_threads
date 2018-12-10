@@ -17,7 +17,6 @@ def binary_search(a, x, lo=0, hi=None):
 def parse_req(request):
     print("UTIL ", request)
     req = request.strip('\n').replace(':', ' ').split()
-    print(req)
     request = None
     if len(req)==3:
         request = Request(req[0], req[1], req[2])
@@ -34,7 +33,6 @@ def add_response(mapper, sock, response):
         mapper[sock] = data
 
 def get(key, cache, persistent, lock):
-    print('received get request for key ', key)
     lock.acquire()
     val = cache.get(key)
     lock.release()
@@ -46,7 +44,6 @@ def get(key, cache, persistent, lock):
             lock.release()
             if retkey and retval:
                 persistent.writeback(retkey, retval)
-    print('data read from storage', val)
     if val:
         return val
     else:
@@ -59,7 +56,6 @@ def put(key, value, cache, persistent, lock):
     if retval is None:
         if persistent.put(key, value):
             lock.acquire()
-            print(key, value)
             retkey, retval, _ = cache.insert(key, value, dirty=False)
             lock.release()
             if retkey and retval:
@@ -108,8 +104,8 @@ def write(key, value, tag, cache, persistent, lock):
     return "ACK"
 
 def acquire_lock(key, client_id, client_lock):
-    print("Inside acquire lock")
     if key in client_lock.values():
+        #print('lock being held by ', list(client_lock.keys())[list(client_lock.values()).index(key)])
         return "LOCK_DENIED"
     else:
         client_lock[client_id] = key
@@ -117,7 +113,6 @@ def acquire_lock(key, client_id, client_lock):
         return "LOCK_GRANTED"
  
 def release_lock(key, client_id, client_lock):
-    print("Inside release lock")
     client_lock[client_id] = ''
     return "ACK"
 

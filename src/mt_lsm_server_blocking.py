@@ -9,9 +9,7 @@ class BlockingMultiThreadedLsmServer(object):
     def __init__(self, host, port, cache_size, db_name, c0_size=200):
         self.host = host
         self.port = port
-        print(host, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print("Socket initialised!",self.sock)
         #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
         self.cache = Cache(cache_size)

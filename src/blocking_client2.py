@@ -161,9 +161,10 @@ class BlockingClient:
         return True
         
 if __name__ == "__main__":
-    client = BlockingClient(1,3)
+    client = BlockingClient(2,3)
     print(client.get(10))
     print(client.get(12))
     print(client.get(10))
     print(client.put(11, "b"))
     print(client.get(13))
+    print(client.put(11, "b"))
