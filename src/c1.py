@@ -32,7 +32,7 @@ class C1:
         self._close()
         keys = [int(x[0]) for x in c1]
         pos = binary_search(keys, int(key))
-        if pos:
+        if pos != -1:
             elm = c1[pos]
             if bool(elm[3]):
                 return None

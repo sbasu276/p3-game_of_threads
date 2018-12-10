@@ -1,7 +1,7 @@
 import sys
-from multi_threaded_server import MultiThreadedServer as ServerBase
+#from multi_threaded_server import MultiThreadedServer as ServerBase
 # Comment the above line and uncomment the following line for LSM implementation
-#from mt_lsm_server import MultiThreadedLsmServer as ServerBase
+from mt_lsm_server import MultiThreadedLsmServer as ServerBase
 
 class AbdServer(ServerBase):
     def __init__(self, host, port, cache_size, db_name):
