@@ -11,7 +11,7 @@ def rand_str(size):
 def rand_val(size, node):
     val = ''.join(random.choices(string.ascii_lowercase, k=size))
     if node:
-        val = val+":"+"0-"+str(node)
+        val = val+":"+"0-"+str(random.randint(1,node))
     return val
 
 def main(num, size, db, db_type, node):
