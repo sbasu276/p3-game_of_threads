@@ -105,6 +105,17 @@ def write(key, value, tag, cache, persistent, lock):
         put(key, value, cache, persistent, lock)
     return "ACK"
 
+def acquire_lock(key, client_id, client_lock):
+    if key in client_lock.values():
+        return "LOCK_DENIED"
+    else:
+        client_lock[client_id] = key
+        return "LOCK_GRANTED"
+ 
+def release_lock(key, client_id, client_lock):
+    client_lock[client_id] = ''
+    return "ACK"
+
 OP_FUNC_MAPPER = {
             'GET': get,
             'PUT': put,
@@ -116,39 +127,11 @@ OP_FUNC_MAPPER = {
             'RELEASE_LOCK' : release_lock
         }
 
-def acquire_lock(key, client_id, client_lock):
-    if key in client_lock.values():
-        return "LOCK_DENIED"
-    else
-        client_lock[client_id] = key
-        return "LOCK_GRANTED"
- 
-def release_lock(key, client_id, client_lock):
-    client_lock[client_id] = ''
-    return "ACK"
-
-
 def call_api(req, cache, persistent, lock):
     if OP_FUNC_MAPPER.get(req.op):
         if req.op in ['GET', 'DELETE', 'GET-TS']:
             return OP_FUNC_MAPPER[req.op](req.key, cache, persistent, lock)
-        elif req.op in ['ACQUIRE_LOCK', 'RELEASE_LOCK']:
-            return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
-        elif req.op in ['WRITE']:
-            return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
-        else:
-            return OP_FUNC_MAPPER[req.op](req.key, req.value, cache, persistent, lock)
-    else:
-        return "-1"
-
-
-def call_api(req, cache, persistent, lock):
-    if OP_FUNC_MAPPER.get(req.op):
-        if req.op in ['GET', 'DELETE', 'GET-TS']:
-            return OP_FUNC_MAPPER[req.op](req.key, cache, persistent, lock)
-        elif req.op in ['ACQUIRE_LOCK', 'RELEASE_LOCK']:
-            return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
-        elif req.op in ['WRITE']:
+        elif req.op in ['WRITE', 'ACQUIRE_LOCK', 'RELEASE_LOCK']:
             return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
         else:
             return OP_FUNC_MAPPER[req.op](req.key, req.value, cache, persistent, lock)

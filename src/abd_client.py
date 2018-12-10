@@ -1,4 +1,4 @@
-import sys, random
+import random
 import threading
 import logical_time as time
 import server_consts as CONST
@@ -15,26 +15,6 @@ def get_handler(server, key, _type, output, barrier, lock):
     except threading.BrokenBarrierError:
         pass
 
-def acquire_lock_handler(server, client_id, key, barrier):
-    client = Client(server[0], server[1])
-    data = client.send_data("%s %s %s\n"%(CONST.LOCK_ACQUIRE, client_id, key))
-    if(data == 'LOCK_GRANTED'):
-        try:
-            barrier.wait() #reporting to barrier
-        except threading.BrokenBarrierError: #Barrier broken - releasing lock
-            client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
-
-    else if(data == 'LOCK_DENIED'):
-        print('Lock denied! Exiting..')
-    else:
-        print('Something wrong @ acquire_lock handler')
-        sys.exit(0)
-
-def release_lock_handler(server, client_id, key):
-    client = Client(server[0], server[1])
-    client.send_data("%s %s %s\n"%(CONST.LOCK_RELEASE, client_id, key))
-
-    
 def put_handler(server, key, value, barrier):
     client = Client(server[0], server[1])
     _type = "WRITE"
@@ -44,29 +24,27 @@ def put_handler(server, key, value, barrier):
     except threading.BrokenBarrierError:
         pass
 
-class BlockingClient:
-    def __init__(self, client_id, num_servers):
+class AbdClient:
+    def __init__(self, num_servers):
         self.server_ids = [i+1 for i in range(num_servers)]
         self.server_map = CONST.SERVER_ID_MAP
         self.quorum_size = (num_servers//2)+1
         self.read_quorum = random.sample(self.server_ids, self.quorum_size)
         self.write_quorum = random.sample(self.server_ids, self.quorum_size)
         self.lock = threading.Lock()
-        self.client_id = client_id
 
     def get(self, key):
-        while(not self._acquire_lock(key)): #Spin lock acquire
-            sleep(2)
         value = self._get(key)
-        self._release_lock(key)
         v, ts = value.split(":", 1)
+        if v!="-1":
+            self._put(key, value)
         return v
 
     def put(self, key, value):
-        while(not self._acquire_lock(key)): #Spin lock acquire
-            sleep(2)
+        timestamp = self._get_timestamp(key)
+        timestamp = time.increment(timestamp)
+        value = str(value)+":"+str(timestamp)
         self._put(key, value)
-        self._release_lock(key)
         return "ACK"
 
     def _get_timestamp(self, key):
@@ -124,35 +102,7 @@ class BlockingClient:
         except threading.BrokenBarrierError:
             pass
 
-    def _acquire_lock(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
-        threads = []
-        for _id in self.server_ids:
-            server = self.server_map[_id]
-            threads.append(threading.Thread(target=acquire_lock_handler, \
-					    args=(server, self.client_id, key, barrier)))
-        for thread in threads:
-            thread.start()
 
-        try:
-            barrier.wait(QUORUM_TIMEOUT) # waiting for quorum
-        except threading.BrokenBarrierError: # failed to attain quorum within timeout - aborting barrier
-            barrier.abort()
-            return False
-
-        return True
-
-    def _release_lock(self, key):
-        for _id in self.server_ids:
-            server = self.server_map[_id]
-            threads.append(threading.Thread(target=release_lock_handler, \
-					    args=(server, self.client_id, key)))
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
-        return True
-        
 if __name__ == "__main__":
     client = AbdClient(1)
     print(client.get(10))
@@ -160,3 +110,5 @@ if __name__ == "__main__":
     print(client.get(10))
     print(client.put(11, "b"))
     print(client.get(13))
+
+
