@@ -127,7 +127,7 @@ OP_FUNC_MAPPER = {
             'RELEASE_LOCK' : release_lock
         }
 
-def call_api(req, cache, persistent, lock, fine_grained_lock):
+def call_api(req, cache, persistent, lock, fine_grained_lock=None):
     if OP_FUNC_MAPPER.get(req.op):
         if req.op in ['GET', 'DELETE', 'GET-TS']:
             return OP_FUNC_MAPPER[req.op](req.key, cache, persistent, lock)
