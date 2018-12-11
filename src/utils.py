@@ -15,9 +15,8 @@ def binary_search(a, x, lo=0, hi=None):
     return (pos if pos != hi and a[pos] == x else -1)  
 
 def parse_req(request):
-    #print("UTIL ", request)
-    req = request.strip('\n').split()
-    #print(req)
+    print("UTIL ", request)
+    req = request.strip('\n').replace(':', ' ').split()
     request = None
     if len(req)==3:
         request = Request(req[0], req[1], req[2])
@@ -57,7 +56,6 @@ def put(key, value, cache, persistent, lock):
     if retval is None:
         if persistent.put(key, value):
             lock.acquire()
-            print(key, value)
             retkey, retval, _ = cache.insert(key, value, dirty=False)
             lock.release()
             if retkey and retval:
@@ -107,9 +105,11 @@ def write(key, value, tag, cache, persistent, lock):
 
 def acquire_lock(key, client_id, client_lock):
     if key in client_lock.values():
+        #print('lock being held by ', list(client_lock.keys())[list(client_lock.values()).index(key)])
         return "LOCK_DENIED"
     else:
         client_lock[client_id] = key
+        print('Granting lock')
         return "LOCK_GRANTED"
  
 def release_lock(key, client_id, client_lock):
@@ -127,11 +127,13 @@ OP_FUNC_MAPPER = {
             'RELEASE_LOCK' : release_lock
         }
 
-def call_api(req, cache, persistent, lock):
+def call_api(req, cache, persistent, lock, fine_grained_lock=None):
     if OP_FUNC_MAPPER.get(req.op):
         if req.op in ['GET', 'DELETE', 'GET-TS']:
             return OP_FUNC_MAPPER[req.op](req.key, cache, persistent, lock)
-        elif req.op in ['WRITE', 'ACQUIRE_LOCK', 'RELEASE_LOCK']:
+        elif req.op in ['ACQUIRE_LOCK', 'RELEASE_LOCK']:
+            return OP_FUNC_MAPPER[req.op](req.key, req.value, fine_grained_lock)
+        elif req.op in ['WRITE']:
             return OP_FUNC_MAPPER[req.op](req.key, req.value, req.tag, cache, persistent, lock)
         else:
             return OP_FUNC_MAPPER[req.op](req.key, req.value, cache, persistent, lock)

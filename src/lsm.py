@@ -21,6 +21,7 @@ class LsmTree:
 
     def get(self, key):
         key = int(key)
+        print('looking up for', key)
         if key in self.memtable:
             if self.memtable[key].tombstone:
                 return None

@@ -49,7 +49,7 @@ class AbdClient:
         return "ACK"
 
     def _get_timestamp(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -68,7 +68,7 @@ class AbdClient:
         return max_time
         
     def _get(self, key):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -90,7 +90,7 @@ class AbdClient:
         return val+":"+max_time 
 
     def _put(self, key, value):
-        barrier = threading.Barrier(self.quorum_size, timeout=1)
+        barrier = threading.Barrier(self.quorum_size+1, timeout=1)
         threads = []
         output = []
         for _id in self.server_ids:
@@ -106,7 +106,7 @@ class AbdClient:
 
 
 if __name__ == "__main__":
-    client = AbdClient(1)
+    client = AbdClient(3)
     print(client.get(10))
     print(client.get(12))
     print(client.get(10))
