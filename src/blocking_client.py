@@ -88,7 +88,7 @@ class BlockingClient:
         except threading.BrokenBarrierError:
             pass
 
-        times = [x[0] for x in output]
+        times = [x[1] for x in output]
         max_time = ltime.get_max_ts(times)
         return max_time
         
